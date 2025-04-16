@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  slug      String    
+  image     String?
+  createdAt DateTime?
+  updatedAt DateTime?
+
+  products Product[] @relation("CategoryToProduct")
+
+  @@map("categories")
+}
+
+model Product {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  cateId           String   @db.ObjectId
+  price            Float
+  salePrice        Float?
+  quantity         Int
+  saledQuantity    Int      @default(0)
+  SKU              String
+  images           String[]
+  oldImages        String[]
+  shortDescription String?
+  description      String?
+  featured         Boolean  @default(false)
+  hot              Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Quan hệ với Category
+  category     Category      @relation("CategoryToProduct", fields: [cateId], references: [id])
+  cartProducts CartProduct[] @relation("ProductToCartProduct")
+  orderItems   OrderItem[]   @relation("ProductToOrderItem")
+
+  @@index([name])
+  @@index([createdAt])
+  @@map("products")
+}
+
+model User {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  email             String    @unique
+  password          String
+  phone             String?
+  avatar            String    @default("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y")
+  role              String    @default("user")
+  resetTokenExpires DateTime?
+  resetToken        String?
+  verifyEmail       Boolean   @default(false)
+  verifyToken       String?
+  blocked           Boolean   @default(false)
+  totalOrders       Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Quan hệ với Order
+  orders Order[] @relation("UserToOrder")
+  cart   Cart?   @relation("UserToCart")
+
+  posts Post[] @relation("UserToPost")
+
+  @@map("users")
+}
+
+model Cart {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String        @unique @db.ObjectId
+  user      User          @relation("UserToCart", fields: [userId], references: [id])
+  products  CartProduct[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("carts")
+}
+
+model CartProduct {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  cartId    String  @db.ObjectId
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation("ProductToCartProduct", fields: [productId], references: [id])
+  quantity  Int     @default(1)
+
+  @@map("cart_products")
+}
+
+model Order {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation("UserToOrder", fields: [userId], references: [id])
+
+  items OrderItem[]
+
+  shippingInfoId String?       @unique @db.ObjectId
+  shippingInfo   ShippingInfo? @relation(fields: [shippingInfoId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  paymentMethod   PaymentMethod
+  shippingMethod  ShippingMethod
+  shippingFee     Float
+  totalAmount     Float
+  totalOrderValue Float
+  cancelledAt     DateTime?
+  status          OrderStatus    @default(pending)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String  @db.ObjectId
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation("ProductToOrderItem", fields: [productId], references: [id])
+  quantity  Int
+
+  @@map("order_items")
+}
+
+model ShippingInfo {
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId String? @db.ObjectId
+  order   Order?  @relation
+
+  name           String
+  phone          String
+  city           String
+  addressDetails String
+
+  @@map("shipping_infos")
+}
+
+enum PaymentMethod {
+  cash_on_delivery
+  paypal
+  credit_card
+}
+
+enum ShippingMethod {
+  free_shipping
+  flat_rate
+  local_pickup
+}
+
+enum OrderStatus {
+  pending
+  shipping
+  completed
+  cancelled
+  returned
+}
+
+model Post {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  content    String
+  coverImage String?
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], name: "UserToPost")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("posts")
+}

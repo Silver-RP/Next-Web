@@ -1,0 +1,36 @@
+.slideshow {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide-content {
+  width: 80%;
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slide-title{
+  font-size: 70px !important;
+}
+
+.slideshow-image-container {
+  flex: 1;
+  text-align: center;
+}
+
+.slideshow-image {
+  max-width: 100%;
+  height: auto;
+}
+
+.slideshow-text-container {
+  flex: 1;
+  padding: 20px;
+  text-align: left;
+}

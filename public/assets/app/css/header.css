@@ -1,0 +1,17 @@
+/* src/assets/css/header.css */
+#header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+
+  .logo__image {
+    display: block !important;
+    width: 150px;
+  }
+
+  .icon_search{
+    color: black;
+  }
+  
+  
